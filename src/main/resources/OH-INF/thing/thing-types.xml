@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="bgh"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<thing-type id="ac">
+		<label>Aire BGH Smart Control</label>
+		<description>Aire acondicionado BGH Smart Control controlado por LAN, sin la nube de Solidmation.</description>
+		<category>HVAC</category>
+		<semantic-equipment-tag>HVAC</semantic-equipment-tag>
+
+		<channels>
+			<channel id="power" typeId="system.power"/>
+			<channel id="mode" typeId="mode"/>
+			<channel id="fanSpeed" typeId="fanSpeed"/>
+			<channel id="targetTemperature" typeId="targetTemperature"/>
+			<channel id="currentTemperature" typeId="currentTemperature"/>
+			<channel id="turbo" typeId="turbo"/>
+			<channel id="swingHorizontal" typeId="swing">
+				<label>Swing horizontal</label>
+			</channel>
+			<channel id="swingVertical" typeId="swing">
+				<label>Swing vertical</label>
+			</channel>
+		</channels>
+
+		<representation-property>macAddress</representation-property>
+
+		<config-description>
+			<parameter name="macAddress" type="text" required="true">
+				<label>Dirección MAC</label>
+				<description>MAC del equipo, por ejemplo AC:CF:23:12:34:56.</description>
+			</parameter>
+			<parameter name="ipAddress" type="text">
+				<context>network-address</context>
+				<label>Dirección IP</label>
+				<description>IP del equipo. Si se deja vacía, se busca por broadcast. Si el equipo cambia de IP, el binding la
+					sigue solo.</description>
+			</parameter>
+			<parameter name="refreshInterval" type="integer" min="5" unit="s">
+				<label>Intervalo de consulta</label>
+				<description>Cada cuánto se consulta el estado del equipo.</description>
+				<default>30</default>
+			</parameter>
+			<parameter name="subscribeInterval" type="integer" min="10" unit="s">
+				<label>Renovación de suscripción</label>
+				<description>Cada cuánto se renueva la suscripción a los cambios que el equipo informa por su cuenta.</description>
+				<default>60</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="endpoint" type="integer" min="0" max="255">
+				<label>Endpoint HVAC</label>
+				<description>Endpoint del protocolo que atiende el aire (1 en el BGH-7032).</description>
+				<default>1</default>
+				<advanced>true</advanced>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<channel-type id="mode">
+		<item-type>String</item-type>
+		<label>Modo</label>
+		<description>Modo de operación del aire.</description>
+		<state>
+			<options>
+				<option value="off">Apagado</option>
+				<option value="cool">Frío</option>
+				<option value="heat">Calor</option>
+				<option value="dry">Deshumidificar</option>
+				<option value="fan">Ventilación</option>
+				<option value="auto">Automático</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="fanSpeed">
+		<item-type>String</item-type>
+		<label>Ventilador</label>
+		<description>Velocidad del ventilador.</description>
+		<state>
+			<options>
+				<option value="low">Baja</option>
+				<option value="mid">Media</option>
+				<option value="high">Alta</option>
+				<option value="auto">Automática</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="targetTemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Temperatura objetivo</label>
+		<category>Temperature</category>
+		<tags>
+			<tag>Setpoint</tag>
+			<tag>Temperature</tag>
+		</tags>
+		<state min="17" max="30" step="1" pattern="%.0f %unit%"/>
+	</channel-type>
+
+	<channel-type id="currentTemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Temperatura ambiente</label>
+		<description>Temperatura medida por el equipo.</description>
+		<category>Temperature</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Temperature</tag>
+		</tags>
+		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+
+	<channel-type id="turbo" advanced="true">
+		<item-type>Switch</item-type>
+		<label>Turbo</label>
+		<description>Modo turbo (solo lectura).</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="swing" advanced="true">
+		<item-type>Switch</item-type>
+		<label>Swing</label>
+		<description>Oscilación de las aletas (solo lectura).</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+</thing:thing-descriptions>

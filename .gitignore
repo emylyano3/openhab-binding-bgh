@@ -1,0 +1,16 @@
+# Maven
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Configuración personal de Claude Code
+.claude/settings.local.json
+
+# Basura del entorno
+*.stackdump
