@@ -109,13 +109,18 @@ En el BGH-7032 (verificado el 2026-11-10):
 | Código | Efecto |
 |---|---|
 | `0x51` | Alterna la oscilación de la aleta que sube y baja (lo que la app llama "horizontal": la aleta es horizontal) |
-| `0x61` | Pita y no hace nada visible: el equipo no tiene aleta lateral |
+| `0x61` | Pita y el display muestra `on`/`oF` un segundo, sin efecto visible: probablemente el swing lateral, que este equipo no tiene |
 | `0x71` | Alterna el turbo |
 
 Cada envío responde ACK y **alterna** la función; no hay códigos separados de encendido y apagado.
 El `StatusReport` no lo refleja (el byte de flags sigue en 0), así que quien controla el equipo tiene que llevar el
 estado. La oscilación sobrevive a un apagado y encendido por `SetMode`, y a un cambio de setpoint.
 Los flags 0x08/0x10/0x20 de `SetMode` no tienen efecto en este modelo.
+
+Se probaron los 256 valores del byte: solo `0x51`, `0x61` y `0x71` reciben ACK; el resto el equipo los ignora
+sin ACK ni NAK. En particular, **no hay código para apagar la luz del display**: la app tampoco lo ofrece (su
+`BacklightTimeout` pertenece a `HACommand_ThermostatSetup`, la configuración de los termostatos de pared de
+Solidmation, no de los aires).
 
 ## Estado de verificación
 
