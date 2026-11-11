@@ -46,8 +46,11 @@ import org.slf4j.LoggerFactory;
  *
  * <ul>
  * <li>Consulta el estado ({@code Poll}) cada {@code refreshInterval} y se suscribe a los cambios espontáneos.</li>
- * <li>Cada comando de openHAB se traduce a un {@code SetMode} completo (modo, ventilador, flags y setpoint), partiendo
- * del último estado conocido, y se reintenta si el equipo no responde con ACK.</li>
+ * <li>Los comandos de encendido, modo, ventilador y setpoint se traducen a un {@code SetMode} completo, partiendo del
+ * último estado conocido, y se reintentan si el equipo no responde con ACK.</li>
+ * <li>Turbo y swing se mandan con {@code cmd_HVAC_Command}: cada envío alterna la función y el equipo no la informa,
+ * así que el binding recuerda el último valor y solo envía cuando cambia. No se reintentan, porque un reintento
+ * cuyo original sí llegó la volvería a alternar.</li>
  * <li>La IP se toma de la configuración o se descubre por broadcast, y se actualiza si el equipo responde desde otra.</li>
  * </ul>
  */
@@ -72,6 +75,8 @@ public class BghAcHandler extends BaseThingHandler implements BghPacketListener 
     private volatile @Nullable InetAddress address;
     private volatile @Nullable HvacTarget target;
     private volatile int lastActiveMode = HvacMode.COOL.code();
+    private volatile boolean turboOn;
+    private volatile boolean swingOn;
     private volatile long lastSeen;
     private volatile CompletableFuture<HvacStatus> nextStatus = new CompletableFuture<>();
     private volatile CompletableFuture<Boolean> nextAck = new CompletableFuture<>();
@@ -133,14 +138,63 @@ public class BghAcHandler extends BaseThingHandler implements BghPacketListener 
 
     private void applyCommand(String channelId, Command command) {
         synchronized (commandLock) {
-            Optional<HvacTarget> current = currentTarget();
-            if (current.isEmpty()) {
-                logger.warn("{}: sin estado del equipo, se descarta {}={}", mac, channelId, command);
-                return;
-            }
-            current.flatMap(base -> applyTo(base, channelId, command))
-                    .ifPresentOrElse(this::sendTarget,
-                            () -> logger.warn("{}: comando no soportado {}={}", mac, channelId, command));
+            toggleCodeOf(channelId).ifPresentOrElse(code -> applyToggle(channelId, code, command),
+                    () -> applyModeCommand(channelId, command));
+        }
+    }
+
+    private void applyModeCommand(String channelId, Command command) {
+        Optional<HvacTarget> current = currentTarget();
+        if (current.isEmpty()) {
+            logger.warn("{}: sin estado del equipo, se descarta {}={}", mac, channelId, command);
+            return;
+        }
+        current.flatMap(base -> applyTo(base, channelId, command))
+                .ifPresentOrElse(this::sendTarget,
+                        () -> logger.warn("{}: comando no soportado {}={}", mac, channelId, command));
+    }
+
+    private Optional<Integer> toggleCodeOf(String channelId) {
+        return switch (channelId) {
+            case CHANNEL_TURBO -> Optional.of(HVAC_COMMAND_TURBO);
+            case CHANNEL_SWING -> Optional.of(HVAC_COMMAND_SWING);
+            default -> Optional.empty();
+        };
+    }
+
+    private void applyToggle(String channelId, int code, Command command) {
+        Optional<Boolean> wanted = powerOf(command);
+        if (wanted.isEmpty()) {
+            logger.warn("{}: comando no soportado {}={}", mac, channelId, command);
+        } else if (wanted.get() != isToggleOn(channelId)) {
+            sendToggle(channelId, code, wanted.get());
+        }
+        publishToggles();
+    }
+
+    private void sendToggle(String channelId, int code, boolean on) {
+        InetAddress ip = address;
+        if (ip == null) {
+            logger.warn("{}: IP desconocida, no se puede enviar {}", mac, channelId);
+            return;
+        }
+        if (!sendAndAwaitAck(ip, BghPacket.hvacCommand(macBytes, config.endpoint, code))) {
+            logger.warn("{}: el equipo no confirmó {} (sin ACK); el estado puede haber quedado desfasado", mac,
+                    channelId);
+            return;
+        }
+        setToggle(channelId, on);
+    }
+
+    private boolean isToggleOn(String channelId) {
+        return CHANNEL_TURBO.equals(channelId) ? turboOn : swingOn;
+    }
+
+    private void setToggle(String channelId, boolean on) {
+        if (CHANNEL_TURBO.equals(channelId)) {
+            turboOn = on;
+        } else {
+            swingOn = on;
         }
     }
 
@@ -310,9 +364,13 @@ public class BghAcHandler extends BaseThingHandler implements BghPacketListener 
         updateState(CHANNEL_FAN_SPEED, new StringType(FanSpeed.describe(status.fan())));
         updateState(CHANNEL_TARGET_TEMPERATURE, new QuantityType<>(status.desiredCelsius(), SIUnits.CELSIUS));
         updateState(CHANNEL_CURRENT_TEMPERATURE, new QuantityType<>(status.measuredCelsius(), SIUnits.CELSIUS));
-        updateState(CHANNEL_TURBO, OnOffType.from(status.hasFlag(FLAG_TURBO)));
-        updateState(CHANNEL_SWING_HORIZONTAL, OnOffType.from(status.hasFlag(FLAG_SWING_H)));
-        updateState(CHANNEL_SWING_VERTICAL, OnOffType.from(status.hasFlag(FLAG_SWING_V)));
+        publishToggles();
+    }
+
+    /** El equipo no informa turbo ni swing: se publica el último valor que el binding le mandó. */
+    private void publishToggles() {
+        updateState(CHANNEL_TURBO, OnOffType.from(turboOn));
+        updateState(CHANNEL_SWING, OnOffType.from(swingOn));
     }
 
     private void onDeviceInfo(DeviceInfo info) {

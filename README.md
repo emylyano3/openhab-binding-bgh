@@ -64,9 +64,13 @@ broadcast en cada consulta para volver a ubicarlo.
 | `fanSpeed` | String | lectura/escritura | `low`, `mid`, `high`, `auto` |
 | `targetTemperature` | Number:Temperature | lectura/escritura | 17 a 30 °C |
 | `currentTemperature` | Number:Temperature | lectura | temperatura medida por el equipo |
-| `turbo` | Switch | lectura | |
-| `swingHorizontal` | Switch | lectura | |
-| `swingVertical` | Switch | lectura | |
+| `turbo` | Switch | lectura/escritura | ON / OFF (ver nota) |
+| `swing` | Switch | lectura/escritura | ON / OFF: oscilación de la aleta que sube y baja (ver nota) |
+
+**Turbo y swing:** el equipo no informa su estado, y cada orden que recibe alterna la función. El binding recuerda
+el último valor que mandó desde openHAB y solo envía la orden cuando el valor pedido es distinto. Si se cambian con
+el control remoto, o al reiniciar openHAB (arranca en OFF), el estado mostrado puede quedar desfasado: tocar el
+interruptor dos veces lo vuelve a sincronizar. El swing se mantiene aunque se apague el aire.
 
 Ejemplo de items (`conf/items/bgh.items`), con el aire como equipo dentro de una ubicación del modelo semántico:
 
@@ -78,7 +82,8 @@ String             AireLiving_Modo  "Modo [%s]"                <climate>     (gA
 String             AireLiving_Fan   "Ventilador [%s]"          <fan>         (gAireLiving) ["Control"]                     { channel="bgh:ac:living:fanSpeed" }
 Number:Temperature AireLiving_Obj   "Objetivo [%.0f %unit%]"   <temperature> (gAireLiving) ["Setpoint", "Temperature"]     { channel="bgh:ac:living:targetTemperature", unit="°C" }
 Number:Temperature AireLiving_Temp  "Ambiente [%.1f %unit%]"   <temperature> (gAireLiving) ["Measurement", "Temperature"]  { channel="bgh:ac:living:currentTemperature", unit="°C" }
-Switch             AireLiving_Turbo "Turbo [%s]"               <fan>         (gAireLiving) ["Status"]                      { channel="bgh:ac:living:turbo" }
+Switch             AireLiving_Turbo "Turbo"                    <fan>         (gAireLiving) ["Switch"]                      { channel="bgh:ac:living:turbo" }
+Switch             AireLiving_Swing "Swing"                    <flow>        (gAireLiving) ["Switch"]                      { channel="bgh:ac:living:swing" }
 ```
 
 Ejemplo de sitemap (`conf/sitemaps/aires.sitemap`):
@@ -91,6 +96,8 @@ sitemap aires label="Aires" {
         Selection item=AireLiving_Fan  mappings=[low="Baja", mid="Media", high="Alta", auto="Automática"]
         Setpoint  item=AireLiving_Obj minValue=17 maxValue=30 step=1
         Text      item=AireLiving_Temp
+        Switch    item=AireLiving_Turbo
+        Switch    item=AireLiving_Swing
     }
 }
 ```
@@ -101,7 +108,8 @@ sitemap aires label="Aires" {
 |---|---|
 | Descubrimiento, lectura de todos los canales, encendido/apagado, `cool`, `heat`, ventilador y setpoint | Verificado en openHAB 5.2.1 con tres BGH-7032 (fw 1.0.0.0) |
 | `dry`, `fan`, `auto` | Implementado, sin probar en el equipo |
-| Turbo y swing | Solo lectura: el envío no está verificado |
+| Turbo y swing de la aleta que sube y baja | Verificado en BGH-7032 con `cmd_HVAC_Command`; el estado lo lleva el binding |
+| Swing lateral | No soportado: el BGH-7032 no tiene esa aleta |
 | Intervalo de renovación de la suscripción | Valor propio (60 s); el de la app es desconocido |
 
 ## Licencia

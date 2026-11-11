@@ -14,6 +14,7 @@ public final class BghProtocol {
     public static final int HEADER_LENGTH = 17;
 
     public static final int CMD_HVAC_SET_MODE = 0x61;
+    public static final int CMD_HVAC_COMMAND = 0x62;
     public static final int CMD_ACK = 0x80;
     public static final int CMD_NAK = 0x81;
     public static final int CMD_JOIN = 0xA1;
@@ -31,6 +32,16 @@ public final class BghProtocol {
     public static final int FLAG_SWING_H = 0x10;
     public static final int FLAG_SWING_V = 0x20;
     public static final int KNOWN_FLAGS = FLAG_TURBO | FLAG_SWING_H | FLAG_SWING_V;
+
+    /*
+     * Códigos de cmd_HVAC_Command (0x62). Cada envío alterna la función: el equipo no la informa en su estado.
+     * En el BGH-7032 los flags de SetMode no tienen efecto; estos códigos sí.
+     */
+    /** Oscilación de la aleta que sube y baja. */
+    public static final int HVAC_COMMAND_SWING = 0x51;
+    /** Oscilación lateral: el BGH-7032 pita pero no tiene esa aleta. */
+    public static final int HVAC_COMMAND_SWING_LATERAL = 0x61;
+    public static final int HVAC_COMMAND_TURBO = 0x71;
 
     private BghProtocol() {
     }

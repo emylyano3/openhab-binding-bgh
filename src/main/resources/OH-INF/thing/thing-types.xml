@@ -17,13 +17,12 @@
 			<channel id="targetTemperature" typeId="targetTemperature"/>
 			<channel id="currentTemperature" typeId="currentTemperature"/>
 			<channel id="turbo" typeId="turbo"/>
-			<channel id="swingHorizontal" typeId="swing">
-				<label>Swing horizontal</label>
-			</channel>
-			<channel id="swingVertical" typeId="swing">
-				<label>Swing vertical</label>
-			</channel>
+			<channel id="swing" typeId="swing"/>
 		</channels>
+
+		<properties>
+			<property name="thingTypeVersion">1</property>
+		</properties>
 
 		<representation-property>macAddress</representation-property>
 
@@ -111,18 +110,17 @@
 		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 
-	<channel-type id="turbo" advanced="true">
+	<channel-type id="turbo">
 		<item-type>Switch</item-type>
 		<label>Turbo</label>
-		<description>Modo turbo (solo lectura).</description>
-		<state readOnly="true"/>
+		<description>Modo turbo. El equipo no lo informa: se muestra el último valor enviado desde openHAB.</description>
 	</channel-type>
 
-	<channel-type id="swing" advanced="true">
+	<channel-type id="swing">
 		<item-type>Switch</item-type>
 		<label>Swing</label>
-		<description>Oscilación de las aletas (solo lectura).</description>
-		<state readOnly="true"/>
+		<description>Oscilación de la aleta que sube y baja. El equipo no lo informa: se muestra el último valor enviado
+			desde openHAB.</description>
 	</channel-type>
 
 </thing:thing-descriptions>

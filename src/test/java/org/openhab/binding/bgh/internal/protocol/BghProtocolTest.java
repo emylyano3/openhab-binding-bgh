@@ -34,6 +34,17 @@ class BghProtocolTest {
     }
 
     @Test
+    void hvacCommandCarriesOneByteCodeToHvacEndpoint() {
+        byte[] swing = BghPacket.hvacCommand(MacAddresses.toBytes(MAC), 1, BghProtocol.HVAC_COMMAND_SWING);
+        byte[] turbo = BghPacket.hvacCommand(MacAddresses.toBytes(MAC), 1, BghProtocol.HVAC_COMMAND_TURBO);
+
+        assertEquals(18, swing.length);
+        assertEquals("accf23123456", HEX.formatHex(swing, 7, 13));
+        assertEquals("0001" + "62" + "51", HEX.formatHex(swing, 14, 18));
+        assertEquals("0001" + "62" + "71", HEX.formatHex(turbo, 14, 18));
+    }
+
+    @Test
     void setModeEncodesSetpointAsCentiCelsiusLittleEndian() {
         HvacTarget target = new HvacTarget(HvacMode.COOL.code(), FanSpeed.LOW.code(), 0, 24);
 

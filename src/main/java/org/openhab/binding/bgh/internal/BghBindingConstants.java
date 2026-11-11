@@ -22,8 +22,7 @@ public final class BghBindingConstants {
     public static final String CHANNEL_TARGET_TEMPERATURE = "targetTemperature";
     public static final String CHANNEL_CURRENT_TEMPERATURE = "currentTemperature";
     public static final String CHANNEL_TURBO = "turbo";
-    public static final String CHANNEL_SWING_HORIZONTAL = "swingHorizontal";
-    public static final String CHANNEL_SWING_VERTICAL = "swingVertical";
+    public static final String CHANNEL_SWING = "swing";
 
     public static final String CONFIG_MAC_ADDRESS = "macAddress";
     public static final String CONFIG_IP_ADDRESS = "ipAddress";

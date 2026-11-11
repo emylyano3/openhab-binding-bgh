@@ -104,6 +104,19 @@ La app espera un `Rsp_ACK` (0x80) y, si no llega, reintenta por cloud.
 Unicast. `CommandID=0x62`, payload de 1 byte. La app lo usa para swing/turbo en equipos con
 `SetSwingModesViaHVACCustomCommand`: bit 0x10 → `0x51`, bit 0x20 → `0x61`, bit 0x08 → `0x71`.
 
+En el BGH-7032 (verificado el 2026-11-10):
+
+| Código | Efecto |
+|---|---|
+| `0x51` | Alterna la oscilación de la aleta que sube y baja (lo que la app llama "horizontal": la aleta es horizontal) |
+| `0x61` | Pita y no hace nada visible: el equipo no tiene aleta lateral |
+| `0x71` | Alterna el turbo |
+
+Cada envío responde ACK y **alterna** la función; no hay códigos separados de encendido y apagado.
+El `StatusReport` no lo refleja (el byte de flags sigue en 0), así que quien controla el equipo tiene que llevar el
+estado. La oscilación sobrevive a un apagado y encendido por `SetMode`, y a un cambio de setpoint.
+Los flags 0x08/0x10/0x20 de `SetMode` no tienen efecto en este modelo.
+
 ## Estado de verificación
 
 Probado el 2026-10-16 contra un BGH-7032 (firmware 1.0.0.0) en la LAN, solo lectura (`discover` y `poll`):
@@ -125,7 +138,8 @@ Probado el 2026-10-16 contra un BGH-7032 (firmware 1.0.0.0) en la LAN, solo lect
 | El equipo emite `CommandID 0xFB` (payload de 5 bytes, p. ej. `01 a4 a7 00 00`) | Observado, sin interpretar |
 | Intervalo de renovación de Subscribe | Desconocido |
 | Semántica de 253/255 | Inferida |
-| Flags de swing/turbo y comando `0x62` | Sin probar |
+| Flags de swing/turbo en `SetMode` | **Sin efecto** en el BGH-7032 (ACK, pero no cambia nada) |
+| Comando `0x62` con `0x51` (swing) y `0x71` (turbo) | **Verificado**: cada envío alterna la función; el estado no lo informa |
 | Cifrado/clave en `Key_Request`/`Set_Key` | No usado en estas rutas; no analizado |
 
 ## Cómo se obtuvo

@@ -55,6 +55,11 @@ public record BghPacket(String sourceMac, int sequence, int sourceEndpoint, int 
         return build(mac, endpoint, CMD_HVAC_SET_MODE, target.toPayload());
     }
 
+    /** Comando HVAC suelto de 1 byte (por ejemplo {@link BghProtocol#HVAC_COMMAND_TURBO}). */
+    public static byte[] hvacCommand(byte[] mac, int endpoint, int code) {
+        return build(mac, endpoint, CMD_HVAC_COMMAND, new byte[] { (byte) code });
+    }
+
     static byte[] build(byte[] destinationMac, int endpoint, int command, byte[] payload) {
         return build(destinationMac, endpoint, command, payload, ThreadLocalRandom.current().nextInt(256));
     }
