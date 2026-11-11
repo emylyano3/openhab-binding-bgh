@@ -7,6 +7,10 @@ El protocolo está documentado en [`docs/PROTOCOL.md`](docs/PROTOCOL.md).
 
 > Proyecto independiente: no está afiliado a BGH ni a Solidmation, ni forma parte de openHAB oficial.
 
+## Descargar
+
+El `.jar` listo para instalar está en [Releases](https://github.com/emylyano3/openhab-binding-bgh/releases).
+
 ## Compilar
 
 Requiere JDK 21 y Maven 3.9+. Las dependencias de openHAB se bajan de `openhab.jfrog.io`.
@@ -19,7 +23,7 @@ Genera `target/org.openhab.binding.bgh-<versión>.jar`.
 
 ## Instalar
 
-1. Copiar el `.jar` a la carpeta `addons/` de openHAB (`/usr/share/openhab/addons/` en Debian/Ubuntu/openHABian,
+1. Copiar el `.jar` (descargado o compilado) a la carpeta `addons/` de openHAB (`/usr/share/openhab/addons/` en Debian/Ubuntu/openHABian,
    `/openhab/addons/` en Docker). openHAB lo carga solo, sin reiniciar.
 2. Verificar en la consola de Karaf: `bundle:list | grep -i bgh` (estado `Active`).
 3. Logs: `log:set DEBUG org.openhab.binding.bgh` (o `TRACE` para ver cada paquete).

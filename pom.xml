@@ -5,7 +5,7 @@
 
   <groupId>org.openhab.addons.bundles</groupId>
   <artifactId>org.openhab.binding.bgh</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <name>openHAB Add-ons :: Bundles :: BGH Smart Control Binding</name>
